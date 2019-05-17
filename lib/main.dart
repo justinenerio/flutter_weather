@@ -1,4 +1,7 @@
+import 'package:flutter_weather/api.dart';
+import 'package:flutter_weather/forecast.dart';
 import 'package:flutter_web/material.dart';
+import 'package:flutter_web/rendering.dart';
 
 void main() => runApp(MyApp());
 
@@ -7,70 +10,94 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Weather',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int count = 0;
+  Forecast forecast;
+
+  @override
+  void initState() {
+    super.initState();
+    retrieveData();
+  }
+
+  void retrieveData() async {
+    Forecast forecast = await getWeather(zip: "6000");
+    setState(() {
+      this.forecast = forecast;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          setState(() {
-            count++;
-          });
-        },
-        child: Icon(Icons.add),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (choose the "Toggle Debug Paint" action
-          // from the Flutter Inspector in Android Studio, or the "Toggle Debug
-          // Paint" command in Visual Studio Code) to see the wireframe for each
-          // widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Hello, World! - $count',
-            ),
+        body: Container(
+      height: double.infinity,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: [0.6, 0.8, 1.0],
+          colors: [
+            Colors.blue[700],
+            Colors.blue[500],
+            Colors.blue[300],
           ],
         ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
+      child: Center(
+        child: forecast == null
+            ? CircularProgressIndicator()
+            : WeatherInfo(forecast: forecast),
+      ),
+    ));
+  }
+}
+
+class WeatherInfo extends StatelessWidget {
+  final Forecast forecast;
+
+  const WeatherInfo({Key key, this.forecast}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(forecast.name,
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold)),
+          SizedBox(height: 50),
+          SizedBox(
+            height: 100,
+            width: 100,
+            child: Image.network(
+                'http://openweathermap.org/img/w/${forecast.weather[0].icon}.png'),
+          ),
+          Text(forecast.weather[0].main,
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 }
